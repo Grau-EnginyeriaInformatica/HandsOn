@@ -19,4 +19,21 @@
 
 # HandsOn-01: Programació bàsica amb C
 - [Pokemon](./HandsOn-01/pokemon.md)
-- [Reptes](./HandsOn-01/reptes.md)
+- [DebianBin](./HandsOn-01/bin.md)
+
+# HandsOn-02: Gestió i comunicació de processos
+- [Pokedex](./HandsOn-02/pokedex.md)
+
+# HandsOn-03: Programació Avançada del Kernel de Linux
+- [Kernel](./HandsOn-03/kernel.md)
+
+# HandsOn-04: Deadlocks
+- [Deadlocks](./HandsOn-04/deadlocks.md)
+
+# HandsOn-05: Programació de Scripts
+- [Bash](./HandsOn-05/bash.md)
+- [Exercicis](./HandsOn-05/exercicis.md)
+
+# HandsOn-06: Gestió de Memòria
+- [Memòria](./HandsOn-06/memoria.md)
+- [Processos](./HandsOn-06/processos.md)

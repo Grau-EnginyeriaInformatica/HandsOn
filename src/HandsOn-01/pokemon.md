@@ -55,7 +55,7 @@ int main() {
 Si compilem i executem el programa, funcionarà i obtindrem el resultat esperat:
 
 ```sh
- gcc -o pokemon pokemon.c
+gcc -o main main.c
 ```
 
 ```sh
@@ -275,7 +275,6 @@ Ara podem utilitzar la nostra llibreria:
 int main() {
     Pokemon pikachu = create_pokemon(25, "Pikachu", 0.4, 6.0);
     print_pokemon(pikachu);
-    destroy_pokemon(pikachu);
     return 0;
 }
 ```
@@ -525,22 +524,93 @@ void set_pokemon_id(Pokemon pokemon, int pokemon_id) {
 }
 ```
 
-Ara podem utilitzar la nostra llibreria:
+**SOLUCIÓ 1**: El setter no funciona ja que la funció **set_pokemon_id** rep una còpia de la variable **pokemon**. Per tant, quan modifiquem el camp **pokemon_id** de la variable **pokemon** dins de la funció **set_pokemon_id**, en realitat estem modificant una còpia de la variable **pokemon**. Per solucionar aquest problema, necessitem passar un punter a la variable **pokemon**. Per tant, la funció **set_pokemon_id** quedaria de la següent manera:
+
+```c
+void set_pokemon_id(Pokemon *pokemon, int pokemon_id) {
+    pokemon->pokemon_id = pokemon_id;
+}
+```
+
+**SOLUCIÓ 2**: No podem declarar la variable ```Pokemon pikachu``` ja que els atributs de la estructura **Pokemon** no són visibles a la funció **main**. Quina memòria ha de reservar si no sap la mida de la estructura **Pokemon**? Per solucionar aquest problema, podem utilitzar un punter a la estructura **Pokemon**. Per tant, la funció **main** quedaria de la següent manera:
 
 ```c
 /*
- * main.c
- */
+* main.c
+*/
 
 #include <stdio.h>
 #include "pokemon.h"
 
 int main() {
-    Pokemon pikachu = create_pokemon(25, "Pikachu", 0.4, 6.0);
+    Pokemon *pikachu;
+    pikachu = create_pokemon(25, "Pikachu", 0.4, 6.0);
     set_pokemon_id(pikachu, 26);
     print_pokemon(pikachu);
     destroy_pokemon(pikachu);
     return 0;
+}
+```
+
+```c
+/*
+* pokemon.h
+*/
+
+#ifndef _POKEMON_H_
+#define _POKEMON_H_
+
+typedef struct pokemon Pokemon;
+
+Pokemon* create_pokemon(int pokemon_id, char *name, double height, double weight);
+void print_pokemon(Pokemon* pokemon);
+void destroy_pokemon(Pokemon* pokemon);
+void set_pokemon_id(Pokemon *pokemon, int pokemon_id);
+
+#endif // _POKEMON_H_
+```
+
+```c
+/*
+* pokemon.c
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h> //strlen(), strcpy()
+#include "pokemon.h"
+
+struct pokemon {
+    int          pokemon_id;
+    char         *name;
+    double       height;
+    double       weight;
+};
+
+Pokemon* create_pokemon(int pokemon_id, char *name, double height, double weight) {
+    Pokemon* pokemon = malloc(sizeof(Pokemon));
+    pokemon->pokemon_id = pokemon_id;
+    pokemon->name = malloc( (strlen(name) + 1) * sizeof(char) );
+    strcpy(pokemon->name, name);
+    pokemon->height = height;
+    pokemon->weight = weight;
+
+    return pokemon;
+}
+
+void print_pokemon(Pokemon* pokemon) {
+    printf("Pokemon: %s\n", pokemon->name);
+    printf("Pokemon ID: %d\n", pokemon->pokemon_id);
+    printf("Pokemon Height: %f\n", pokemon->height);
+    printf("Pokemon Weight: %f\n", pokemon->weight);
+}
+
+void destroy_pokemon(Pokemon* pokemon) {
+    free(pokemon->name);
+    free(pokemon);
+}
+
+void set_pokemon_id(Pokemon *pokemon, int pokemon_id) {
+    pokemon->pokemon_id = pokemon_id;
 }
 ```
 
@@ -620,7 +690,7 @@ print_pokemon(pikachu, file);
 
 ## Test de la llibreria
 
-Es recomanable sempre que programem llibreries incloure un fitxer de test on puguem provar les funcionalitats de la llibreria. En aquest cas, crearem un fitxer anomenat **test.c** on provarem les funcionalitats. I ens permetrà en un futur fer modificacions a la llibreria sense por de trencar la funcionalitat. 
+Es recomanable sempre que programem llibreries incloure un fitxer de test on puguem provar les funcionalitats de la llibreria. En aquest cas, crearem un fitxer anomenat **test.c** on provarem les funcionalitats. I ens permetrà en un futur fer modificacions a la llibreria sense por de trencar la funcionalitat. En aquest punt (**s'assumeix que tenim la struct i el typedef al punt h i són visibles i no cal treballar amb la modalitat en punters**).
 
 
 ```c
@@ -635,8 +705,8 @@ Es recomanable sempre que programem llibreries incloure un fitxer de test on pug
 
 void test_crear_pokemon() {
     Pokemon pikachu = create_pokemon(25, "Pikachu", 0.4, 6.0);
-    if (p.pokemon_id != 25 || strcmp(p.name, "Pikachu") != 0 ||
-        p.height != 0.4 || p.weight != 6.0) {
+    if (pikachu.pokemon_id != 25 || strcmp(pikachu.name, "Pikachu") != 0 ||
+        pikachu.height != 0.4 || pikachu.weight != 6.0) {
         printf("ERROR: test_crear_pokemon NO SUPERAT. Dades incorrectes.\n");
     } else {
         printf("Test de test_crear_pokemon passat amb èxit.\n");
@@ -690,4 +760,30 @@ make execute
 ```
 **NOTA**: Si conservem el *main.c* original al mateix directori *make* fallarà ja que tindrà dos entrades **int main()** una al fitxer *main.c* i l'altra al fitxer *test.c*. Com el nostre Makefile intenta enllaçar tots els fitxers per formar un únic executable, fallarà ja que no pot enllaçar dos funcions **int main()**. Per tant, elimineu el fitxer *main.c*.
 
+## Reptes
 
+1. Completeu la llibreria `pokemon.c` amb les funcions **getter** i **setter** per a cada un dels atributs de la classe `Pokemon`.
+2. Afegiu una funció de test per assegurar que la funció print_pokemon(Pokemon pokemon, int fd) funciona de forma correcta.
+3. Implementeu una funció que permeti inicialitzar un pokemon a partir d'un string amb el format: `pokemon_id name height weight`.
+4. Afegiu una matriu per guardar un màxim de dos tipus de pokemon. La matriu tindrà la següent forma: `char *types[2]`. Actualtizeu totes les funcions implementades per treballar amb aquest nou atribut.
+
+
+## Solució i Problemes generals
+
+He creat un [repositori](https://github.com/OS-GEI-IGUALADA-2223/HandsOn01-pokemon) amb una solució possible dels exercicis. 
+
+### Problemes generals a tenir en compte
+
+1. **Neteja del projecte**: Assegureu-vos de fer un make clean abans de recompilar i tornar a testejar per garantir que tots els objectes es regenerin i no hi hagi falsos positius.
+
+2. **Compilació i Makefile**: Compileu utilitzant el Makefile i totes les opcions proporcionades. Si apareixen errors o avisos, haureu de solucionar-los.
+
+3. **Gestió de memòria**: No cal alliberar i reallocar memòria cada vegada que es fa el setter per al nom o els tipus. Només cal fer-ho una vegada. Podeu comprovar que el punter no sigui NULL abans de realitzar l'assignació.
+
+4. **Control d'errors d'impressió**: Assegureu-vos que les operacions d'impressió no es realitzin amb punteres NULL per evitar errors.
+
+5. **Alliberament de memòria**: Recorda que tota la memòria reservada amb malloc o calloc s'ha de alliberar utilitzant free.
+
+6. **Optimització de codi**: Eviteu el copiar i enganxar excessiu de codi. Per exemple, en comptes de fer múltiples crides a malloc per type[0] i type[1], seria més eficient fer un bucle i definir el nombre de tipus com a una constant utilitzant #define.
+
+7. **Testeu**: Intenteu executar el vostre codi amb diferents condicions per assegurar que funciona en diferents situacions.
